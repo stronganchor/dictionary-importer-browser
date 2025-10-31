@@ -1,16 +1,25 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
-add_shortcode('dictionary_search', function($atts) {
+// ----- Shortcode render (adds TR/EN placeholder) -----
+add_shortcode('dictionary_search', 'dib_render_search_shortcode');
+
+function dib_render_search_shortcode() {
+    // Server-side fallback placeholder (JS can still override via localized strings)
+    $locale = function_exists('determine_locale') ? determine_locale() : get_locale();
+    $is_tr  = (stripos($locale, 'tr') === 0);
+    $ph     = $is_tr ? 'Kelime ara' : 'Search word';
+
     ob_start(); ?>
     <div id="dib-search">
-        <input type="text" id="dib-search-input" placeholder="Search word..." />
+        <input type="text" id="dib-search-input" placeholder="<?php echo esc_attr($ph); ?>" />
         <div id="dib-results"></div>
     </div>
     <?php
     return ob_get_clean();
-});
+}
 
+// ----- AJAX: leave this exactly as you have it -----
 add_action('wp_ajax_dib_search', 'dib_ajax_search');
 add_action('wp_ajax_nopriv_dib_search', 'dib_ajax_search');
 
@@ -49,10 +58,6 @@ function dib_ajax_search() {
     $like_any_n = '%' . $like_norm_esc . '%';
     $like_pref_n= $like_norm_esc . '%';
 
-    // Primary query:
-    // Order by exact (entry==term), then exact on definition, then prefix (entry), prefix (definition),
-    // then contains (entry), contains (definition). Secondary sort by entry ASC.
-    // We also include normalized-term comparisons as fallbacks in both WHERE and ORDER BY.
     $sql = "
         SELECT entry, definition, gender_number, entry_type, entry_lang, def_lang
         FROM $table
@@ -91,8 +96,7 @@ function dib_ajax_search() {
         $like_pref_n    // definition LIKE term_norm%
     ));
 
-    // If nothing decent came back, do a fuzzy fallback:
-    // Grab a modest slice of candidates by initial letter(s) and rank by Levenshtein on normalized strings.
+    // Fuzzy fallback if empty
     if (empty($rows)) {
         $seed = mb_substr($term_norm, 0, max(1, min(3, mb_strlen($term_norm, 'UTF-8'))), 'UTF-8');
         $like_seed = $wpdb->esc_like($seed) . '%';
@@ -108,11 +112,9 @@ function dib_ajax_search() {
              '%' . $wpdb->esc_like(mb_substr($seed, 0, 1, 'UTF-8')) . '%'
         ));
 
-        // Score by Levenshtein distance on normalized entry
         $scored = [];
         foreach ($candidates as $r) {
             $e_norm = $normalize($r->entry);
-            // Guard: levenshtein works best on <=255 length; entries should be short
             $dist = levenshtein($term_norm, $e_norm);
             $scored[] = ['row' => $r, 'dist' => $dist];
         }
@@ -128,4 +130,3 @@ function dib_ajax_search() {
 
     wp_send_json($rows ?: []);
 }
-
