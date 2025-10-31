@@ -1,6 +1,7 @@
 #dib-search { max-width:600px; margin:20px auto; }
 #dib-search-input { width:100%; padding:8px; font-size:16px; }
 #dib-results { margin-top:10px; border:1px solid #ccc; background:#fafafa; padding:10px; }
+#dib-results:empty { display: none; }
 
 .dib-browser { max-width:700px; margin:auto; }
 .dib-letters a { margin:2px; padding:4px 8px; border:1px solid #ccc; display:inline-block; text-decoration:none; }
