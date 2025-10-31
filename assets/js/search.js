@@ -10,8 +10,8 @@
       gender_z: 'pl.'
     };
 
-    var $q = $('#dib-query');
-    var $out = $('#dib-results');
+	var $q = $('#dib-search-input');
+	var $out = $('#dib-results');
 
     // Ensure placeholder matches locale
     if ($q.length) $q.attr('placeholder', t.search_placeholder);
