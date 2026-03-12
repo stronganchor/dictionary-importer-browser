@@ -17,6 +17,8 @@ function dib_render_import_page() {
     if (!current_user_can('manage_options')) return;
 
     if (!empty($_POST['submit']) && !empty($_FILES['tsv_file']['tmp_name'])) {
+        check_admin_referer('dib_import_tsv', 'dib_import_nonce');
+
         $entry_lang = sanitize_text_field($_POST['entry_lang']);
         $def_lang = sanitize_text_field($_POST['def_lang']);
 
@@ -30,6 +32,7 @@ function dib_render_import_page() {
     <div class="wrap">
         <h1>Dictionary TSV Import</h1>
         <form method="post" enctype="multipart/form-data">
+            <?php wp_nonce_field('dib_import_tsv', 'dib_import_nonce'); ?>
             <table class="form-table">
                 <tr>
                     <th><label>TSV File</label></th>

@@ -25,9 +25,12 @@ add_action('wp_ajax_nopriv_dib_search', 'dib_ajax_search');
 
 function dib_ajax_search() {
     global $wpdb;
-    $term_raw = sanitize_text_field($_GET['q'] ?? '');
+    $term_raw = isset($_GET['q']) ? sanitize_text_field(wp_unslash($_GET['q'])) : '';
     $term = trim($term_raw);
     if ($term === '') { wp_send_json([]); }
+
+    $term = mb_substr($term, 0, 64, 'UTF-8');
+    if (mb_strlen($term, 'UTF-8') < 2) { wp_send_json([]); }
 
     $table = $wpdb->prefix . 'dictionary_entries';
 
@@ -97,7 +100,7 @@ function dib_ajax_search() {
     ));
 
     // Fuzzy fallback if empty
-    if (empty($rows)) {
+    if (empty($rows) && mb_strlen($term_norm, 'UTF-8') >= 3) {
         $seed = mb_substr($term_norm, 0, max(1, min(3, mb_strlen($term_norm, 'UTF-8'))), 'UTF-8');
         $like_seed = $wpdb->esc_like($seed) . '%';
 
@@ -106,7 +109,7 @@ function dib_ajax_search() {
              FROM $table
              WHERE entry LIKE %s OR entry LIKE %s OR entry LIKE %s
              ORDER BY entry ASC
-             LIMIT 300",
+             LIMIT 150",
              $like_seed,
              '%' . $wpdb->esc_like($seed) . '%',
              '%' . $wpdb->esc_like(mb_substr($seed, 0, 1, 'UTF-8')) . '%'

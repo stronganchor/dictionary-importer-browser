@@ -57,7 +57,7 @@
         pending = null;
       }
       pending = setTimeout(function(){
-        if (!val){
+        if (!val || val.length < 2){
           $out.empty(); // CSS rule #dib-results:empty {display:none} will hide this
           return;
         }
