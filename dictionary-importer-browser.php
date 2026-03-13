@@ -2,7 +2,7 @@
 /*
 Plugin Name: Dictionary Importer & Browser
 Description: Import TSV dictionaries and provide searchable/browsable shortcodes.
-Version: 1.0
+Version: 1.0.1
 Update URI: https://github.com/stronganchor/dictionary-importer-browser
 Author: Strong Anchor Tech
 */
